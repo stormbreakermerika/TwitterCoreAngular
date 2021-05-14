@@ -16,21 +16,30 @@ namespace TwitterCoreAngular
     [ApiController]
     public class TwitterController : ControllerBase
     {
+        private readonly IHttpClientFactory _httpClientFactory;
+        public TwitterController(IHttpClientFactory httpClientFactory)
+        {
+            _httpClientFactory = httpClientFactory;
+        }
         // GET: api/<TwitterController>
         [HttpGet]
         public async Task<IEnumerable<Tweet>> Get()
         {
 
             List<Tweet> tweets = new List<Tweet>();
-            HttpClient twitterClient = new HttpClient();
-
-            twitterClient.BaseAddress = new System.Uri("https://api.twitter.com");
-            twitterClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "AAAAAAAAAAAAAAAAAAAAACp4PgEAAAAADzpiA%2F4tXIXqo953R4BSqqjiivA%3D2cxDJH79lyq9By4h4eN4T8suHyWSa6VASGUM7Pt3oZX9DYLws3");
-
+            //HttpClient twitterClient = new HttpClient();
+            HttpClient twitterClient = _httpClientFactory.CreateClient("tweets");
 
             try
             {
-                HttpResponseMessage httpResponse = await twitterClient.GetAsync("/2/tweets/search/recent?query=" + WebUtility.UrlEncode("(#azure OR #dotnetcore) -is:retweet") + "&expansions=attachments.media_keys&media.fields=preview_image_url,url,width,height");
+                //interesting thing about this line is the expansions I believe is what cause it to be full text of the tweet... at least according to: https://twittercommunity.com/t/how-do-i-get-full-tweet-text-in-v2/142129/3
+                HttpResponseMessage httpResponse = await twitterClient.GetAsync("/2/tweets/search/recent?query=" + WebUtility.UrlEncode("(#azure OR #dotnetcore) -is:retweet") + "&expansions=attachments.media_keys&media.fields=preview_image_url,url,width,height&max_results=15");
+
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    throw new InvalidOperationException("Twitter API has an error");
+                }
+
                 string stringContent = await httpResponse.Content.ReadAsStringAsync();
                 TwitterResponse respJson = JsonConvert.DeserializeObject<TwitterResponse>(stringContent);
                 tweets = respJson.Tweets;
@@ -46,7 +55,6 @@ namespace TwitterCoreAngular
             }
 
             return tweets;
-
         }
     }
 }

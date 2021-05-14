@@ -26,6 +26,11 @@ namespace TwitterCoreAngular
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+            services.AddHttpClient("tweets", client =>
+            {
+                client.BaseAddress = new System.Uri("https://api.twitter.com");
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "AAAAAAAAAAAAAAAAAAAAACp4PgEAAAAADzpiA%2F4tXIXqo953R4BSqqjiivA%3D2cxDJH79lyq9By4h4eN4T8suHyWSa6VASGUM7Pt3oZX9DYLws3");
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
